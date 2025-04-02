@@ -5,5 +5,6 @@ type User struct {
 	ID       string `json:"id"`
 	Username string `json:"username" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
-	Status   string `json:"status"` // "online", "offline", etc.
+	Password string `json:"password" binding:"required"` // New attribute
+	Status   string `json:"status"`                      // "online", "offline", etc.
 }
