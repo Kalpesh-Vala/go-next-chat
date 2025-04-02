@@ -32,7 +32,11 @@ func CreateUser(c *gin.Context) {
 	user.ID = strconv.Itoa(userID)
 	users[user.ID] = user
 
-	c.JSON(http.StatusCreated, user)
+	// Remove password from response for security
+	responseUser := user
+	responseUser.Password = ""
+
+	c.JSON(http.StatusCreated, responseUser)
 }
 
 // GetUsers returns all users

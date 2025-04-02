@@ -31,9 +31,11 @@ type Client struct {
 
 // HandleWS upgrades HTTP connection to WebSocket and manages the connection
 func HandleWS(c *gin.Context, clients *sync.Map) {
-	userId := c.Param("userId")
-
-	// Check if userId exists in your user store (omitted for simplicity)
+	userId, exists := c.Get("userId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 
 	// Upgrade to WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -44,14 +46,14 @@ func HandleWS(c *gin.Context, clients *sync.Map) {
 
 	// Create a new client
 	client := &Client{
-		ID:       userId,
+		ID:       userId.(string),
 		Conn:     conn,
 		Send:     make(chan []byte, 256),
-		Username: "User-" + userId, // For simplicity, create a username from the ID
+		Username: "User-" + userId.(string),
 	}
 
 	// Register this client
-	clients.Store(userId, client)
+	clients.Store(userId.(string), client)
 
 	// Start goroutines for handling connections
 	go client.writePump()
