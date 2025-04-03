@@ -21,21 +21,41 @@ export default function Login() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setIsLoading(true);
     
-    try {
-      const data = await login(formData);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', formData.email.split('@')[0]); // Temporary username storage
-      toast.success('Login successful!');
-      router.push('/dashboard');
-    } catch (error) {
-      toast.error(error.message || 'Login failed. Please try again.');
-      setIsLoading(false);
-    }
-  };
+//     try {
+//       const data = await login(formData);
+//       localStorage.setItem('token', data.token);
+//       localStorage.setItem('username', formData.email.split('@')[0]); // Temporary username storage
+//       toast.success('Login successful!');
+//       router.push('/dashboard');
+//     } catch (error) {
+//       toast.error(error.message || 'Login failed. Please try again.');
+//       setIsLoading(false);
+//     }
+//   };
+
+  
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        
+        try {
+        const data = await login(formData);
+        localStorage.setItem('token', data.token);
+        // Store the email for display purposes
+        localStorage.setItem('username', formData.email.split('@')[0]); 
+        // Store user ID for WebSocket connection
+        localStorage.setItem('userId', data.id); // Add this line
+        toast.success('Login successful!');
+        router.push('/dashboard');
+        } catch (error) {
+        toast.error(error.message || 'Login failed. Please try again.');
+        setIsLoading(false);
+        }
+    };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-b from-blue-50 to-white">

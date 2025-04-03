@@ -8,6 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ChatMessage from '../components/ChatMessage';
 import UserList from '../components/UserList';
 import ChatInput from '../components/ChatInput';
+import { parseJwt } from '../utils/jwtUtils';
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,41 +21,117 @@ export default function Dashboard() {
   const router = useRouter();
   
   // Check authentication
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username');
+//   useEffect(() => {
+//     const token = localStorage.getItem('token');
+//     const username = localStorage.getItem('username');
     
-    if (!token) {
-      router.push('/login');
-      return;
+//     if (!token) {
+//       router.push('/login');
+//       return;
+//     }
+    
+//     setCurrentUser(username);
+    
+//     // Fetch all users
+//     const fetchUsers = async () => {
+//       try {
+//         const userData = await getAllUsers();
+//         setUsers(userData.filter(user => user.username !== username));
+//         setIsLoading(false);
+//       } catch (error) {
+//         toast.error('Failed to load users. Please try again.');
+//         console.error('Error fetching users:', error);
+//       }
+//     };
+    
+//     fetchUsers();
+    
+//     // Connect to WebSocket
+//     const ws = new WebSocket(`ws://localhost:8080/ws/${username}?token=${token}`);
+    
+//     ws.onopen = () => {
+//       console.log('WebSocket connected');
+//       toast.success('Connected to chat server');
+//       setSocket(ws);
+//     };
+    
+//     ws.onmessage = (event) => {
+//       const message = JSON.parse(event.data);
+//       setMessages((prevMessages) => [...prevMessages, message]);
+      
+//       // Scroll to bottom when new message arrives
+//       if (chatContainerRef.current) {
+//         setTimeout(() => {
+//           chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+//         }, 100);
+//       }
+//     };
+    
+//     ws.onerror = (error) => {
+//       console.error('WebSocket error:', error);
+//       toast.error('Chat connection error');
+//     };
+    
+//     ws.onclose = () => {
+//       console.log('WebSocket disconnected');
+//     };
+    
+//     return () => {
+//       if (ws) ws.close();
+//     };
+//   }, [router]);
+
+// Inside the useEffect hook
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  const username = localStorage.getItem('username');
+  
+  if (!token) {
+    router.push('/login');
+    return;
+  }
+  
+  // Parse the token to get the user ID
+  const tokenData = parseJwt(token);
+  const userId = tokenData?.userId;
+  
+  if (!userId) {
+    console.error('Could not extract user ID from token');
+    toast.error('Authentication error. Please log in again.');
+    router.push('/login');
+    return;
+  }
+  
+  setCurrentUser(username);
+  
+  // Fetch all users
+  const fetchUsers = async () => {
+    try {
+      const userData = await getAllUsers();
+      setUsers(userData.filter(user => user.username !== username));
+      setIsLoading(false);
+    } catch (error) {
+      toast.error('Failed to load users. Please try again.');
+      console.error('Error fetching users:', error);
     }
-    
-    setCurrentUser(username);
-    
-    // Fetch all users
-    const fetchUsers = async () => {
-      try {
-        const userData = await getAllUsers();
-        setUsers(userData.filter(user => user.username !== username));
-        setIsLoading(false);
-      } catch (error) {
-        toast.error('Failed to load users. Please try again.');
-        console.error('Error fetching users:', error);
-      }
-    };
-    
-    fetchUsers();
-    
-    // Connect to WebSocket
-    const ws = new WebSocket(`ws://localhost:8080/ws/${username}?token=${token}`);
-    
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      toast.success('Connected to chat server');
-      setSocket(ws);
-    };
-    
-    ws.onmessage = (event) => {
+  };
+  
+  fetchUsers();
+  
+  // Connect to WebSocket using the extracted userId
+  const wsUrl = `ws://localhost:8080/ws/${userId}?token=${token}`;
+  console.log('Connecting to WebSocket:', wsUrl); // Debugging log
+  
+  const ws = new WebSocket(wsUrl);
+  
+  ws.onopen = () => {
+    console.log('WebSocket connected successfully');
+    toast.success('Connected to chat server');
+    setSocket(ws);
+  };
+  
+  ws.onmessage = (event) => {
+    try {
       const message = JSON.parse(event.data);
       setMessages((prevMessages) => [...prevMessages, message]);
       
@@ -64,22 +141,40 @@ export default function Dashboard() {
           chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }, 100);
       }
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      toast.error('Chat connection error');
-    };
-    
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
-    
-    return () => {
-      if (ws) ws.close();
-    };
-  }, [router]);
+    } catch (error) {
+      console.error('Error processing message:', error);
+    }
+  };
   
+  ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+    
+    // Provide more specific error messages based on common issues
+    if (error.message && error.message.includes('401')) {
+      toast.error('Authentication failed. Please log in again.');
+      localStorage.removeItem('token');
+      router.push('/login');
+    } else if (error.message && error.message.includes('404')) {
+      toast.error('Chat server endpoint not found.');
+    } else {
+      toast.error('Chat connection error. Please try refreshing the page.');
+    }
+  };
+  
+  ws.onclose = (event) => {
+    console.log('WebSocket disconnected:', event.code, event.reason);
+    if (event.code !== 1000) { // Not a normal closure
+      toast.error('Disconnected from chat server');
+    }
+  };
+  
+  return () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.close(1000, 'Component unmounting');
+    }
+  };
+}, [router]);
+
   // Send message
   const sendMessage = (content) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
