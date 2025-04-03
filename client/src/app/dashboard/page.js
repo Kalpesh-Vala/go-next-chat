@@ -7,7 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ChatMessage from '../components/ChatMessage';
 import UserList from '../components/UserList';
 import ChatInput from '../components/ChatInput';
-import { parseJwt } from '../utils/jwtUtils';``
+import { parseJwt } from '../utils/jwtUtils';
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -170,12 +170,20 @@ export default function Dashboard() {
             {filteredMessages.length > 0 ? (
               <div className="space-y-3">
                 {filteredMessages.map((msg, i) => (
-                  <ChatMessage key={i} message={msg} currentUser={currentUser} selectedChat={selectedChat} />
+                  <ChatMessage
+                    key={i}
+                    message={msg}
+                    currentUser={currentUser}
+                    selectedChat={selectedChat}
+                    previousMessage={filteredMessages[i - 1]} // Pass the previous message
+                  />
                 ))}
               </div>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500">
-                {selectedChat === 'common' ? 'No messages in common chat yet. Start the conversation!' : `Start a conversation with ${selectedChat}`}
+                {selectedChat === 'common'
+                  ? 'No messages in common chat yet. Start the conversation!'
+                  : `Start a conversation with ${selectedChat}`}
               </div>
             )}
           </div>
