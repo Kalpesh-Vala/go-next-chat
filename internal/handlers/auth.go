@@ -37,8 +37,9 @@ func Login(c *gin.Context) {
 		if user.Email == req.Email && user.Password == req.Password {
 			// Generate JWT token
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-				"userId": user.ID,
-				"exp":    time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
+				"userId":   user.ID,
+				"username": user.Username,                         // Add username to the token
+				"exp":      time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 			})
 			tokenString, err := token.SignedString(jwtSecret)
 			if err != nil {
