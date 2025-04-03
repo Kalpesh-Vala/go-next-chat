@@ -27,6 +27,18 @@ func CreateUser(c *gin.Context) {
 	userMutex.Lock()
 	defer userMutex.Unlock()
 
+	// Check for duplicate username or email
+	for _, existingUser := range users {
+		if existingUser.Username == user.Username {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
+			return
+		}
+		if existingUser.Email == user.Email {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
+			return
+		}
+	}
+
 	// Generate ID and save user
 	userID++
 	user.ID = strconv.Itoa(userID)
