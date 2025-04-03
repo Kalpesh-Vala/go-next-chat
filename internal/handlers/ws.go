@@ -37,6 +37,15 @@ func HandleWS(c *gin.Context, clients *sync.Map) {
 		return
 	}
 
+	// Find the username for the userId
+	userMutex.Lock()
+	user, userExists := users[userId.(string)]
+	userMutex.Unlock()
+	if !userExists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
 	// Upgrade to WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -49,7 +58,7 @@ func HandleWS(c *gin.Context, clients *sync.Map) {
 		ID:       userId.(string),
 		Conn:     conn,
 		Send:     make(chan []byte, 256),
-		Username: "User-" + userId.(string),
+		Username: user.Username,
 	}
 
 	// Register this client
@@ -111,9 +120,21 @@ func (c *Client) readPump(clients *sync.Map) {
 		msgBytes, _ := json.Marshal(msg)
 
 		if msg.Recipient != "" {
-			// Direct message to a specific user
-			if recipient, ok := clients.Load(msg.Recipient); ok {
-				recipient.(*Client).Send <- msgBytes
+			// Direct message to a specific user by username
+			var recipientId string
+			clients.Range(func(key, value interface{}) bool {
+				client := value.(*Client)
+				if client.Username == msg.Recipient {
+					recipientId = client.ID
+					return false
+				}
+				return true
+			})
+
+			if recipientId != "" {
+				if recipient, ok := clients.Load(recipientId); ok {
+					recipient.(*Client).Send <- msgBytes
+				}
 			}
 		} else {
 			// Broadcast to all users

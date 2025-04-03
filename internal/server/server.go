@@ -62,14 +62,26 @@ func (s *Server) setupRoutes() {
 // jwtMiddleware validates the JWT token
 func jwtMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var tokenString string
+
+		// First, check the "Authorization" header
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+		}
+
+		// If not found, check the WebSocket query parameter
+		if tokenString == "" {
+			tokenString = c.Query("token") // Extract from URL parameter
+		}
+
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token required"})
 			c.Abort()
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		// Parse and validate the token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
@@ -84,17 +96,59 @@ func jwtMiddleware() gin.HandlerFunc {
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
+		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
 			return
 		}
 
-		// Pass userId to the context
-		c.Set("userId", claims["userId"])
+		// Extract user ID from token claims
+		userId, ok := claims["userId"].(string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+			c.Abort()
+			return
+		}
+
+		// Pass userId to the context for further use
+		c.Set("userId", userId)
 		c.Next()
 	}
 }
+
+// 		authHeader := c.GetHeader("Authorization")
+// 		if authHeader == "" {
+// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+// 			c.Abort()
+// 			return
+// 		}
+
+// 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+// 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 				return nil, jwt.ErrSignatureInvalid
+// 			}
+// 			return jwtSecret, nil
+// 		})
+
+// 		if err != nil || !token.Valid {
+// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+// 			c.Abort()
+// 			return
+// 		}
+
+// 		claims, ok := token.Claims.(jwt.MapClaims)
+// 		if !ok || !token.Valid {
+// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+// 			c.Abort()
+// 			return
+// 		}
+
+// 		// Pass userId to the context
+// 		c.Set("userId", claims["userId"])
+// 		c.Next()
+// 	}
+// }
 
 // Start begins listening on the specified address
 func (s *Server) Start(addr string) error {

@@ -68,7 +68,7 @@ http://localhost:8080/api
 - **URL:** `/users`
 - **Method:** `GET`
 - **Headers:**
-  - None
+  - `Authorization: Bearer <your_jwt_token>`
 - **Response:**
   - **200 OK**
     ```json
@@ -84,11 +84,11 @@ http://localhost:8080/api
 
 ---
 
-### 4. **Get User by ID**
-- **URL:** `/users/:id`
+### 4. **Get User by Username**
+- **URL:** `/users/:username`
 - **Method:** `GET`
 - **Headers:**
-  - None
+  - `Authorization: Bearer <your_jwt_token>`
 - **Response:**
   - **200 OK**
     ```json
@@ -104,13 +104,35 @@ http://localhost:8080/api
 ---
 
 ### 5. **WebSocket Communication**
-- **URL:** `ws://localhost:8080/ws/:userId`
+- **URL:** `ws://localhost:8080/ws/:username`
 - **Headers:**
-  - `Authorization: Bearer <your_jwt_token>`
+  - `Authorization: Bearer <your_jwt_token>` (optional if token is sent as a query parameter)
+- **Query Parameters:**
+  - `token`: JWT token obtained from the `/login` endpoint (if not sent in the `Authorization` header)
 - **Steps:**
   1. Use a WebSocket client (e.g., Postman or a browser extension) to connect to the WebSocket endpoint.
-  2. Ensure the `Authorization` header contains the JWT token obtained from the login endpoint.
+  2. Pass the JWT token either in the `Authorization` header or as a query parameter (`?token=<your_jwt_token>`).
   3. Send and receive messages in real-time.
+
+#### WebSocket Message Format
+- **Outgoing Message:**
+  ```json
+  {
+    "type": "message",
+    "content": "Hello, world!",
+    "recipient": "recipient_username" // Leave empty for broadcast
+  }
+  ```
+- **Incoming Message:**
+  ```json
+  {
+    "type": "message",
+    "content": "Hello, world!",
+    "sender": "sender_username",
+    "recipient": "recipient_username", // Empty for broadcast
+    "time": "2023-01-01T12:00:00Z"
+  }
+  ```
 
 ---
 
@@ -119,7 +141,7 @@ http://localhost:8080/api
 - Ensure the server is running on `http://localhost:8080` before testing the endpoints.
 - Use Postman to set up the headers, body, and method for each request.
 
---- 
+---
 
 ## Example Postman Collection
 You can create a Postman collection with the following steps:
