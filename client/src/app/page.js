@@ -1,10 +1,17 @@
 // src/app/page.js - Landing Page
 'use client';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { warmupBackend } from './services/authService';
 
 export default function Home() {
   const router = useRouter();
+
+  useEffect(() => {
+    // Warm up the backend service when the app loads
+    warmupBackend();
+  }, []);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-b from-blue-50 to-white">

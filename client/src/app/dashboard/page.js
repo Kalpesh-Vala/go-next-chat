@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getAllUsers } from '../services/userService';
+import { warmupBackend } from '../services/authService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ChatMessage from '../components/ChatMessage';
 import UserList from '../components/UserList';
@@ -53,7 +54,7 @@ export default function Dashboard() {
 
     fetchUsers();
 
-    const wsUrl = `ws://localhost:8080/ws/${userId}?token=${token}`;
+    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}/${userId}?token=${token}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
