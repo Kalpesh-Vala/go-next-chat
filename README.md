@@ -1,206 +1,94 @@
-# API Documentation for Postman
+# 💬 GoNextChat – Real-time Chat App with Go & Next.js
 
-This document provides instructions for testing all API endpoints of the Go-React-Chat application using Postman.
+![Go](https://img.shields.io/badge/Go-1.20+-skyblue?logo=go)
+![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
+![WebSocket](https://img.shields.io/badge/WebSocket-enabled-green)
+![License](https://img.shields.io/github/license/kalpesh-vala/kalpesh-vala-go-next-chat)
 
 ---
 
-## Base URL
+## 🌐 Live Demo
+
+🚀 **[Visit the App →](https://go-next-chat.vercel.app/)**  
+📍 Hosted on **Vercel** with a Go backend server running locally or on remote instance
+
+---
+
+## 📌 Project Overview
+
+**GoNextChat** is a full-stack, real-time chat application built using **Go (Golang)** for the backend and **Next.js (React)** for the frontend. It supports user authentication, chat messaging, and real-time communication using **WebSockets**. This app follows a modular, maintainable structure for both backend and frontend, ensuring scalability and ease of development.
+
+---
+
+## 🧠 Features
+
+✅ JWT-based user authentication  
+✅ Real-time messaging via WebSockets  
+✅ RESTful user APIs  
+✅ Modular React components (Chat UI, User List, Input)  
+✅ Dashboard with protected routes  
+✅ Secure login & registration  
+✅ Responsive and clean UI using Tailwind CSS  
+✅ Hooks & utilities for date/time & JWT decoding
+
+---
+
+## 🏗️ Project Structure
+
 ```
-http://localhost:8080/api
+kalpesh-vala-go-next-chat/
+├── main.go # Entry point for Go server
+├── go.mod / go.sum # Go dependencies
+├── internal/
+│ ├── handlers/ # HTTP and WS handlers
+│ ├── models/ # Data models
+│ └── server/ # Server setup and routing
+├── client/ # Next.js frontend
+│ ├── src/app/
+│ │ ├── components/ # UI components
+│ │ ├── hooks/ # Custom hooks
+│ │ ├── services/ # API interaction logic
+│ │ ├── login/, register/, dashboard/
+│ │ └── utils/ # Helper functions
+├── docs/ # Documentation
+└── README.md
 ```
 
----
-
-## Endpoints
-
-### 1. **Register a User**
-- **URL:** `/users`
-- **Method:** `POST`
-- **Headers:**
-  - `Content-Type: application/json`
-- **Body:**
-  ```json
-  {
-    "username": "testuser",
-    "email": "testuser@example.com",
-    "password": "password123",
-    "status": "online"
-  }
-  ```
-- **Response:**
-  - **201 Created**
-    ```json
-    {
-      "id": "1",
-      "username": "testuser",
-      "email": "testuser@example.com",
-      "status": "online"
-    }
-    ```
-  - **400 Bad Request** (if validation fails)
 
 ---
 
-### 2. **Login**
-- **URL:** `/login`
-- **Method:** `POST`
-- **Headers:**
-  - `Content-Type: application/json`
-- **Body:**
-  ```json
-  {
-    "email": "testuser@example.com",
-    "password": "password123"
-  }
-  ```
-- **Response:**
-  - **200 OK**
-    ```json
-    {
-      "token": "your_jwt_token"
-    }
-    ```
-  - **401 Unauthorized** (if credentials are invalid)
+## 🛠️ Tech Stack
+
+| Layer     | Tech                          |
+|-----------|-------------------------------|
+| Backend   | Go (Golang), WebSockets, JWT  |
+| Frontend  | Next.js 14 (App Router), React|
+| Styling   | Tailwind CSS                  |
+| Auth      | JWT Tokens                    |
+| API       | RESTful                       |
+| Comm.     | WebSocket                     |
+| Tools     | ESLint, PostCSS, Go Modules   |
 
 ---
 
-### 3. **Get All Users**
-- **URL:** `/users`
-- **Method:** `GET`
-- **Headers:**
-  - `Authorization: Bearer <your_jwt_token>`
-- **Response:**
-  - **200 OK**
-    ```json
-    [
-      {
-        "id": "1",
-        "username": "testuser",
-        "email": "testuser@example.com",
-        "status": "online"
-      }
-    ]
-    ```
+## 🚀 Getting Started
 
----
+### 🧱 Prerequisites
+- Go 1.20+
+- Node.js 18+
+- Yarn or npm
 
-### 4. **Get User by Username**
-- **URL:** `/users/:username`
-- **Method:** `GET`
-- **Headers:**
-  - `Authorization: Bearer <your_jwt_token>`
-- **Response:**
-  - **200 OK**
-    ```json
-    {
-      "id": "1",
-      "username": "testuser",
-      "email": "testuser@example.com",
-      "status": "online"
-    }
-    ```
-  - **404 Not Found** (if user does not exist)
+### ⚙️ Run Backend (Go)
 
----
-
-### 5. **WebSocket Communication**
-- **URL:** `ws://localhost:8080/ws/:username`
-- **Headers:**
-  - `Authorization: Bearer <your_jwt_token>` (optional if token is sent as a query parameter)
-- **Query Parameters:**
-  - `token`: JWT token obtained from the `/login` endpoint (if not sent in the `Authorization` header)
-- **Steps:**
-  1. Use a WebSocket client (e.g., Postman or a browser extension) to connect to the WebSocket endpoint.
-  2. Pass the JWT token either in the `Authorization` header or as a query parameter (`?token=<your_jwt_token>`).
-  3. Send and receive messages in real-time.
-
-#### WebSocket Message Format
-- **Outgoing Message:**
-  ```json
-  {
-    "type": "message",
-    "content": "Hello, world!",
-    "recipient": "recipient_username" // Leave empty for broadcast
-  }
-  ```
-- **Incoming Message:**
-  ```json
-  {
-    "type": "message",
-    "content": "Hello, world!",
-    "sender": "sender_username",
-    "recipient": "recipient_username", // Empty for broadcast
-    "time": "2023-01-01T12:00:00Z"
-  }
-  ```
-
----
-
-## Notes
-- Replace `<your_jwt_token>` with the token received from the `/login` endpoint.
-- Ensure the server is running on `http://localhost:8080` before testing the endpoints.
-- Use Postman to set up the headers, body, and method for each request.
-
----
-
-## Example Postman Collection
-You can create a Postman collection with the following steps:
-1. Create a new request for each endpoint.
-2. Set the appropriate method, URL, headers, and body as described above.
-3. Save the requests in a collection for easy reuse.
-
-```json
-{
-  "info": {
-    "name": "Go-React-Chat API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Register User",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\",\n  \"status\": \"online\"\n}"
-        },
-        "url": {
-          "raw": "http://localhost:8080/api/users",
-          "protocol": "http",
-          "host": ["localhost:8080"],
-          "path": ["api", "users"]
-        }
-      }
-    },
-    {
-      "name": "Login",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
-        },
-        "url": {
-          "raw": "http://localhost:8080/api/login",
-          "protocol": "http",
-          "host": ["localhost:8080"],
-          "path": ["api", "login"]
-        }
-      }
-    }
-  ]
-}
+```bash
+# In root directory
+go run main.go
 ```
-You can import this JSON into Postman to quickly set up the requests.
+
+⚙️ Run Frontend (Next.js)
+```bash
+cd client
+npm install
+npm run dev
+```
+
